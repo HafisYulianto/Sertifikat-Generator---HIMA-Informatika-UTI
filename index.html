@@ -3,54 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sertifikat Generator Pro - Bulk Mode</title>
+    <title>Sertifikat Generator - HIMA Informatika UTI</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #e9ecef; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1300px; justify-content: center; }
+        :root {
+            --maroon: #800000;
+            --maroon-dark: #5a0000;
+            --maroon-light: #a31515;
+            --gold: #FFD700;
+            --gold-gradient: linear-gradient(135deg, #F1C40F, #F39C12);
+            --bg-color: #f4f6f9;
+            --text-dark: #333;
+            --white: #ffffff;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Poppins', sans-serif; 
+        }
+
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-dark); 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+        }
+
+        .header-brand {
+            background-color: var(--maroon);
+            width: 100%;
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--gold);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            margin-bottom: 40px;
+        }
+
+        .header-brand h1 { 
+            margin: 0; 
+            color: var(--gold); 
+            font-weight: 700; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 28px;
+        }
+
+        .header-brand p { 
+            margin: 5px 0 0; 
+            color: var(--white); 
+            font-size: 16px; 
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        /* Pengaturan Logo Header */
+        .logo-header {
+            max-width: 100px; /* Ubah angka ini untuk memperbesar/memperkecil logo */
+            height: auto;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        .container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 30px; 
+            width: 100%; 
+            max-width: 1200px; 
+            justify-content: center; 
+            padding: 0 20px 40px;
+        }
         
-        /* Panel Kontrol */
-        .controls { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .card { 
+            background: var(--white); 
+            padding: 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            border-top: 4px solid var(--maroon);
+        }
+
+        .controls { width: 100%; max-width: 450px; }
+        .preview { flex: 1; min-width: 320px; text-align: center; }
+
+        .form-group { margin-bottom: 20px; }
+        label { 
+            display: block; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            font-size: 14px; 
+            color: var(--maroon); 
+        }
+        
+        input[type="file"], input[type="text"], input[type="number"], select, textarea { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            transition: all 0.3s ease;
+            background-color: #fafafa;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--maroon);
+            outline: none;
+            background-color: var(--white);
+            box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+        }
+
         textarea { height: 120px; resize: vertical; }
         
-        .flex-row { display: flex; gap: 10px; }
+        input[type="color"] {
+            padding: 5px;
+            height: 48px;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            accent-color: var(--maroon);
+            cursor: pointer;
+        }
+
+        .flex-row { display: flex; gap: 15px; }
         .flex-row > div { flex: 1; }
 
-        .btn { width: 100%; padding: 12px; font-size: 15px; font-weight: bold; color: white; border: none; border-radius: 6px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-zip { background-color: #dc3545; }
-        .btn-zip:hover { background-color: #c82333; }
-        .btn-zip:disabled { background-color: #ccc; cursor: not-allowed; }
+        .btn-zip { 
+            width: 100%; 
+            padding: 15px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: var(--maroon-dark); 
+            background: var(--gold-gradient);
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4);
+        }
 
-        /* Preview */
-        .preview { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1; min-width: 320px; text-align: center; }
-        canvas { max-width: 100%; height: auto; border: 1px solid #eee; background: #f9f9f9; }
-        .status { margin-top: 10px; font-weight: bold; color: #007bff; }
+        .btn-zip:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(241, 196, 15, 0.6);
+            color: var(--maroon);
+        }
+
+        .btn-zip:disabled { 
+            background: #e0e0e0; 
+            color: #999; 
+            cursor: not-allowed; 
+            box-shadow: none;
+            transform: none;
+        }
+
+        canvas { 
+            max-width: 100%; 
+            height: auto; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: #f9f9f9 url('data:image/svg+xml;utf8,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="20" fill="none"/><circle cx="2" cy="2" r="1" fill="%23ddd"/></svg>');
+            margin-top: 15px;
+        }
+        
+        .status { 
+            margin-top: 15px; 
+            font-weight: 600; 
+            color: var(--maroon); 
+            background-color: #fff0f0;
+            padding: 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .info-box {
+            background: #fff8e1; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border-left: 4px solid var(--gold);
+        }
+        
+        #progressText {
+            font-size: 14px; 
+            margin-top: 15px; 
+            text-align: center;
+            font-weight: 600;
+            color: var(--maroon);
+        }
     </style>
 </head>
 <body>
 
-    <h2 style="color: #2c3e50;">Generator Sertifikat Massal (Tanpa Server)</h2>
+    <header class="header-brand">
+        <h1>Generator Sertifikat</h1>
+        <p>HIMA Informatika - Universitas Teknokrat Indonesia</p>
+        <img src="logo-hima.png" alt="Logo HIMA" class="logo-header">
+    </header>
 
     <div class="container">
-        <div class="controls">
+        <div class="card controls">
             <div class="form-group">
-                <label>1. Upload Gambar Template (PNG/JPG)</label>
+                <label>1. Upload Template (PNG/JPG)</label>
                 <input type="file" id="uploadFile" accept="image/*">
             </div>
 
             <div class="form-group">
                 <label>2. Pilih Jenis Font</label>
                 <select id="selectFont">
+                    <option value="'Poppins'">Poppins (Modern/Bersih)</option>
                     <option value="Arial">Arial (Standar)</option>
                     <option value="Georgia">Georgia (Elegan/Serif)</option>
                     <option value="'Times New Roman'">Times New Roman (Formal)</option>
                     <option value="'Courier New'">Courier New (Typewriter)</option>
-                    <option value="Verdana">Verdana (Modern)</option>
-                    <option value="Impact">Impact (Tegas)</option>
                 </select>
             </div>
 
@@ -61,7 +232,7 @@
                 </div>
                 <div class="form-group">
                     <label>Warna Teks</label>
-                    <input type="color" id="fontColor" value="#1a1a1a">
+                    <input type="color" id="fontColor" value="#000000">
                 </div>
             </div>
 
@@ -70,22 +241,25 @@
                 <input type="range" id="posY" min="0" max="1000" value="500">
             </div>
 
-            <div class="form-group" style="background: #fff3cd; padding: 10px; border-radius: 8px;">
-                <label>3. Daftar Nama (100+ Nama - Satu per baris)</label>
-                <textarea id="listNama" placeholder="Contoh:&#10;Andi Saputra&#10;Siti Aminah&#10;Budi Cahyadi"></textarea>
-                <small style="color: #856404;">Teks di baris pertama akan muncul di pratinjau.</small>
+            <div class="form-group info-box">
+                <label style="color: #b78a00;">3. Daftar Nama Peserta</label>
+                <textarea id="listNama" placeholder="Masukkan nama peserta di sini...&#10;Satu baris untuk satu nama.&#10;&#10;Contoh:&#10;Andi Saputra&#10;Siti Aminah&#10;Budi Cahyadi"></textarea>
+                <small style="color: #666; display: block; margin-top: 5px;">* Teks di baris pertama otomatis muncul di pratinjau.</small>
             </div>
 
-            <button id="btnDownloadZip" class="btn btn-zip" disabled>
-                🎁 Download Semua (.ZIP)
+            <button id="btnDownloadZip" class="btn-zip" disabled>
+                Generate & Download (.ZIP)
             </button>
-            <div id="progressText" style="font-size: 12px; margin-top: 5px; text-align: center;"></div>
+            <div id="progressText"></div>
         </div>
 
-        <div class="preview">
-            <label>Pratinjau (Nama Pertama):</label>
+        <div class="card preview">
+            <label style="font-size: 18px;">Pratinjau Sertifikat</label>
+            <p style="color: #777; font-size: 13px; margin-bottom: 15px;">Pastikan posisi nama sudah pas sebelum mengunduh.</p>
+            
             <canvas id="mainCanvas" width="800" height="600"></canvas>
-            <p id="statusInfo" class="status">Silakan upload template...</p>
+            <br>
+            <div id="statusInfo" class="status">Menunggu upload template...</div>
         </div>
     </div>
 
@@ -100,7 +274,13 @@
         let templateImg = new Image();
         let isLoaded = false;
 
-        // Fungsi menggambar satu sertifikat
+        ctx.fillStyle = "#e0e0e0";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.font = "20px Poppins";
+        ctx.fillStyle = "#999";
+        ctx.textAlign = "center";
+        ctx.fillText("Area Pratinjau Desain", canvas.width/2, canvas.height/2);
+
         function drawOne(nama) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
@@ -113,18 +293,17 @@
             ctx.font = `bold ${size}px ${font}`;
             ctx.fillStyle = color;
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle'; 
             ctx.fillText(nama, canvas.width / 2, y);
         }
 
-        // Update pratinjau real-time
         function updatePreview() {
             if (!isLoaded) return;
             const names = listNama.value.split('\n').filter(n => n.trim() !== "");
-            const nameToShow = names.length > 0 ? names[0] : "[Nama Pratinjau]";
+            const nameToShow = names.length > 0 ? names[0] : "[NAMA PESERTA]";
             drawOne(nameToShow);
         }
 
-        // Handle Upload
         uploadFile.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -138,7 +317,12 @@
                     document.getElementById('posY').value = templateImg.height / 2;
                     isLoaded = true;
                     btnDownloadZip.disabled = false;
-                    document.getElementById('statusInfo').innerText = "Template Terpasang!";
+                    
+                    const statusEl = document.getElementById('statusInfo');
+                    statusEl.innerText = "Template Berhasil Dipasang!";
+                    statusEl.style.backgroundColor = "#e8f5e9";
+                    statusEl.style.color = "#2e7d32";
+                    
                     updatePreview();
                 };
                 templateImg.src = event.target.result;
@@ -146,47 +330,50 @@
             reader.readAsDataURL(file);
         });
 
-        // Event Listener untuk inputan
         [listNama, 'selectFont', 'fontSize', 'fontColor', 'posY'].forEach(id => {
             const el = typeof id === 'string' ? document.getElementById(id) : id;
             el.addEventListener('input', updatePreview);
         });
 
-        // FITUR UTAMA: GENERATE MASSAL KE ZIP
         btnDownloadZip.addEventListener('click', async () => {
             const names = listNama.value.split('\n').filter(n => n.trim() !== "");
-            if (names.length === 0) return alert("Masukkan daftar nama dulu!");
+            if (names.length === 0) {
+                alert("Masukkan minimal satu nama peserta terlebih dahulu!");
+                listNama.focus();
+                return;
+            }
 
             btnDownloadZip.disabled = true;
+            btnDownloadZip.innerText = "Memproses...";
             const zip = new JSZip();
             const total = names.length;
 
             for (let i = 0; i < total; i++) {
                 const nama = names[i].trim();
-                progressText.innerText = `Memproses: ${i + 1} dari ${total} nama...`;
+                progressText.innerText = `Membuat sertifikat: ${i + 1} dari ${total} (${nama})...`;
                 
-                // Gambar ke canvas
                 drawOne(nama);
 
-                // Convert canvas ke blob (data gambar)
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
                 
-                // Masukkan ke dalam folder ZIP
-                zip.file(`Sertifikat_${nama.replace(/\s+/g, '_')}.jpg`, blob);
+                const safeName = nama.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, '_');
+                zip.file(`Sertifikat_${safeName}.jpg`, blob);
             }
 
-            progressText.innerText = "Mengompresi ke ZIP... Mohon tunggu.";
+            progressText.innerText = "Mengompresi file menjadi ZIP... Mohon tunggu.";
             
-            // Generate file ZIP dan download
             zip.generateAsync({ type: "blob" }).then((content) => {
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(content);
-                link.download = "Kumpulan_Sertifikat.zip";
+                link.download = "Sertifikat_HIMA_UTI.zip";
                 link.click();
                 
                 btnDownloadZip.disabled = false;
+                btnDownloadZip.innerHTML = "Generate & Download (.ZIP)";
                 progressText.innerText = "Selesai! File ZIP berhasil diunduh.";
-                updatePreview(); // Kembalikan pratinjau ke nama pertama
+                progressText.style.color = "#2e7d32";
+                
+                updatePreview(); 
             });
         });
     </script>
