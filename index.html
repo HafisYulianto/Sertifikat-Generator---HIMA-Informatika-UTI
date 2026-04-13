@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sertifikat Generator Pro - Bulk Mode</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #e9ecef; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1300px; justify-content: center; }
+        
+        /* Panel Kontrol */
+        .controls { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        textarea { height: 120px; resize: vertical; }
+        
+        .flex-row { display: flex; gap: 10px; }
+        .flex-row > div { flex: 1; }
+
+        .btn { width: 100%; padding: 12px; font-size: 15px; font-weight: bold; color: white; border: none; border-radius: 6px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-zip { background-color: #dc3545; }
+        .btn-zip:hover { background-color: #c82333; }
+        .btn-zip:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Preview */
+        .preview { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1; min-width: 320px; text-align: center; }
+        canvas { max-width: 100%; height: auto; border: 1px solid #eee; background: #f9f9f9; }
+        .status { margin-top: 10px; font-weight: bold; color: #007bff; }
+    </style>
+</head>
+<body>
+
+    <h2 style="color: #2c3e50;">Generator Sertifikat Massal (Tanpa Server)</h2>
+
+    <div class="container">
+        <div class="controls">
+            <div class="form-group">
+                <label>1. Upload Gambar Template (PNG/JPG)</label>
+                <input type="file" id="uploadFile" accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label>2. Pilih Jenis Font</label>
+                <select id="selectFont">
+                    <option value="Arial">Arial (Standar)</option>
+                    <option value="Georgia">Georgia (Elegan/Serif)</option>
+                    <option value="'Times New Roman'">Times New Roman (Formal)</option>
+                    <option value="'Courier New'">Courier New (Typewriter)</option>
+                    <option value="Verdana">Verdana (Modern)</option>
+                    <option value="Impact">Impact (Tegas)</option>
+                </select>
+            </div>
+
+            <div class="flex-row">
+                <div class="form-group">
+                    <label>Ukuran Font</label>
+                    <input type="number" id="fontSize" value="80">
+                </div>
+                <div class="form-group">
+                    <label>Warna Teks</label>
+                    <input type="color" id="fontColor" value="#1a1a1a">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Posisi Nama (Geser Atas/Bawah)</label>
+                <input type="range" id="posY" min="0" max="1000" value="500">
+            </div>
+
+            <div class="form-group" style="background: #fff3cd; padding: 10px; border-radius: 8px;">
+                <label>3. Daftar Nama (100+ Nama - Satu per baris)</label>
+                <textarea id="listNama" placeholder="Contoh:&#10;Andi Saputra&#10;Siti Aminah&#10;Budi Cahyadi"></textarea>
+                <small style="color: #856404;">Teks di baris pertama akan muncul di pratinjau.</small>
+            </div>
+
+            <button id="btnDownloadZip" class="btn btn-zip" disabled>
+                🎁 Download Semua (.ZIP)
+            </button>
+            <div id="progressText" style="font-size: 12px; margin-top: 5px; text-align: center;"></div>
+        </div>
+
+        <div class="preview">
+            <label>Pratinjau (Nama Pertama):</label>
+            <canvas id="mainCanvas" width="800" height="600"></canvas>
+            <p id="statusInfo" class="status">Silakan upload template...</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const uploadFile = document.getElementById('uploadFile');
+        const listNama = document.getElementById('listNama');
+        const btnDownloadZip = document.getElementById('btnDownloadZip');
+        const progressText = document.getElementById('progressText');
+
+        let templateImg = new Image();
+        let isLoaded = false;
+
+        // Fungsi menggambar satu sertifikat
+        function drawOne(nama) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+
+            const font = document.getElementById('selectFont').value;
+            const size = document.getElementById('fontSize').value;
+            const color = document.getElementById('fontColor').value;
+            const y = document.getElementById('posY').value;
+
+            ctx.font = `bold ${size}px ${font}`;
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.fillText(nama, canvas.width / 2, y);
+        }
+
+        // Update pratinjau real-time
+        function updatePreview() {
+            if (!isLoaded) return;
+            const names = listNama.value.split('\n').filter(n => n.trim() !== "");
+            const nameToShow = names.length > 0 ? names[0] : "[Nama Pratinjau]";
+            drawOne(nameToShow);
+        }
+
+        // Handle Upload
+        uploadFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                templateImg.onload = () => {
+                    canvas.width = templateImg.width;
+                    canvas.height = templateImg.height;
+                    document.getElementById('posY').max = templateImg.height;
+                    document.getElementById('posY').value = templateImg.height / 2;
+                    isLoaded = true;
+                    btnDownloadZip.disabled = false;
+                    document.getElementById('statusInfo').innerText = "Template Terpasang!";
+                    updatePreview();
+                };
+                templateImg.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Event Listener untuk inputan
+        [listNama, 'selectFont', 'fontSize', 'fontColor', 'posY'].forEach(id => {
+            const el = typeof id === 'string' ? document.getElementById(id) : id;
+            el.addEventListener('input', updatePreview);
+        });
+
+        // FITUR UTAMA: GENERATE MASSAL KE ZIP
+        btnDownloadZip.addEventListener('click', async () => {
+            const names = listNama.value.split('\n').filter(n => n.trim() !== "");
+            if (names.length === 0) return alert("Masukkan daftar nama dulu!");
+
+            btnDownloadZip.disabled = true;
+            const zip = new JSZip();
+            const total = names.length;
+
+            for (let i = 0; i < total; i++) {
+                const nama = names[i].trim();
+                progressText.innerText = `Memproses: ${i + 1} dari ${total} nama...`;
+                
+                // Gambar ke canvas
+                drawOne(nama);
+
+                // Convert canvas ke blob (data gambar)
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                
+                // Masukkan ke dalam folder ZIP
+                zip.file(`Sertifikat_${nama.replace(/\s+/g, '_')}.jpg`, blob);
+            }
+
+            progressText.innerText = "Mengompresi ke ZIP... Mohon tunggu.";
+            
+            // Generate file ZIP dan download
+            zip.generateAsync({ type: "blob" }).then((content) => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = "Kumpulan_Sertifikat.zip";
+                link.click();
+                
+                btnDownloadZip.disabled = false;
+                progressText.innerText = "Selesai! File ZIP berhasil diunduh.";
+                updatePreview(); // Kembalikan pratinjau ke nama pertama
+            });
+        });
+    </script>
+</body>
+</html>
