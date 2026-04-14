@@ -62,9 +62,8 @@
             letter-spacing: 0.5px;
         }
 
-        /* Pengaturan Logo Header */
         .logo-header {
-            max-width: 100px; /* Ubah angka ini untuk memperbesar/memperkecil logo */
+            max-width: 100px; 
             height: auto;
             margin-top: 15px;
             display: inline-block;
@@ -190,6 +189,14 @@
             border-left: 4px solid var(--gold);
         }
         
+        .number-box {
+            background: #fdfaf6; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #e0d4c3;
+            margin-bottom: 20px;
+        }
+
         #progressText {
             font-size: 14px; 
             margin-top: 15px; 
@@ -215,35 +222,48 @@
             </div>
 
             <div class="form-group">
-                <label>2. Pilih Jenis Font</label>
-                <select id="selectFont">
+                <label>2. Format Teks & Nama</label>
+                <select id="selectFont" style="margin-bottom: 10px;">
                     <option value="'Poppins'">Poppins (Modern/Bersih)</option>
                     <option value="Arial">Arial (Standar)</option>
                     <option value="Georgia">Georgia (Elegan/Serif)</option>
                     <option value="'Times New Roman'">Times New Roman (Formal)</option>
                     <option value="'Courier New'">Courier New (Typewriter)</option>
                 </select>
+                <div class="flex-row">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">Ukuran Font Nama</label>
+                        <input type="number" id="fontSize" value="80">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">Posisi Y Nama</label>
+                        <input type="range" id="posY" min="0" max="1000" value="500">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">Warna</label>
+                        <input type="color" id="fontColor" value="#000000">
+                    </div>
+                </div>
             </div>
 
-            <div class="flex-row">
-                <div class="form-group">
-                    <label>Ukuran Font</label>
-                    <input type="number" id="fontSize" value="80">
+            <div class="number-box">
+                <label style="color: #6d4c41;">3. Pengaturan Nomor Sertifikat</label>
+                <input type="text" id="startNomor" value="005/SK/PAN-PEL/HIMA-IF/ITI/IV/2026" placeholder="Contoh: 001/SK/...">
+                <div class="flex-row" style="margin-top: 10px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">Ukuran Font Nomor</label>
+                        <input type="number" id="nomorFontSize" value="30">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">Posisi Y Nomor</label>
+                        <input type="range" id="nomorPosY" min="0" max="1000" value="300">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Warna Teks</label>
-                    <input type="color" id="fontColor" value="#000000">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Posisi Nama (Geser Atas/Bawah)</label>
-                <input type="range" id="posY" min="0" max="1000" value="500">
             </div>
 
             <div class="form-group info-box">
-                <label style="color: #b78a00;">3. Daftar Nama Peserta</label>
-                <textarea id="listNama" placeholder="Masukkan nama peserta di sini...&#10;Satu baris untuk satu nama.&#10;&#10;Contoh:&#10;Andi Saputra&#10;Siti Aminah&#10;Budi Cahyadi"></textarea>
+                <label style="color: #b78a00;">4. Daftar Nama Peserta</label>
+                <textarea id="listNama" placeholder="Masukkan nama peserta di sini...&#10;Satu baris untuk satu nama.&#10;&#10;Contoh:&#10;Andi Saputra&#10;Siti Aminah"></textarea>
                 <small style="color: #666; display: block; margin-top: 5px;">* Teks di baris pertama otomatis muncul di pratinjau.</small>
             </div>
 
@@ -255,7 +275,7 @@
 
         <div class="card preview">
             <label style="font-size: 18px;">Pratinjau Sertifikat</label>
-            <p style="color: #777; font-size: 13px; margin-bottom: 15px;">Pastikan posisi nama sudah pas sebelum mengunduh.</p>
+            <p style="color: #777; font-size: 13px; margin-bottom: 15px;">Pastikan posisi nama dan nomor sudah pas sebelum mengunduh.</p>
             
             <canvas id="mainCanvas" width="800" height="600"></canvas>
             <br>
@@ -281,27 +301,55 @@
         ctx.textAlign = "center";
         ctx.fillText("Area Pratinjau Desain", canvas.width/2, canvas.height/2);
 
-        function drawOne(nama) {
+        // Fungsi Cerdas untuk Auto-Increment Nomor Sertifikat
+        function generateNomorOtomatis(formatDasar, index) {
+            if (!formatDasar) return "";
+            
+            // Mencari kelompok angka pertama di dalam string (misal: "005" dari "005/SK/...")
+            return formatDasar.replace(/(\d+)/, function(match) {
+                const angkaBaru = parseInt(match, 10) + index;
+                // Mempertahankan angka nol di depan (padding)
+                return String(angkaBaru).padStart(match.length, '0');
+            });
+        }
+
+        function drawOne(nama, nomorSertifikat) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
 
             const font = document.getElementById('selectFont').value;
-            const size = document.getElementById('fontSize').value;
             const color = document.getElementById('fontColor').value;
-            const y = document.getElementById('posY').value;
-
-            ctx.font = `bold ${size}px ${font}`;
-            ctx.fillStyle = color;
+            
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle'; 
-            ctx.fillText(nama, canvas.width / 2, y);
+            ctx.fillStyle = color;
+
+            // 1. Gambar Nama
+            const sizeNama = document.getElementById('fontSize').value;
+            const yNama = document.getElementById('posY').value;
+            ctx.font = `bold ${sizeNama}px ${font}`;
+            ctx.fillText(nama, canvas.width / 2, yNama);
+
+            // 2. Gambar Nomor Sertifikat
+            if (nomorSertifikat) {
+                const sizeNomor = document.getElementById('nomorFontSize').value;
+                const yNomor = document.getElementById('nomorPosY').value;
+                // Font dibuat tidak bold (normal) agar beda dengan nama
+                ctx.font = `normal ${sizeNomor}px ${font}`; 
+                ctx.fillText(nomorSertifikat, canvas.width / 2, yNomor);
+            }
         }
 
         function updatePreview() {
             if (!isLoaded) return;
             const names = listNama.value.split('\n').filter(n => n.trim() !== "");
             const nameToShow = names.length > 0 ? names[0] : "[NAMA PESERTA]";
-            drawOne(nameToShow);
+            
+            // Ambil nomor awal untuk pratinjau (index 0)
+            const formatAwal = document.getElementById('startNomor').value;
+            const nomorPratinjau = generateNomorOtomatis(formatAwal, 0);
+
+            drawOne(nameToShow, nomorPratinjau);
         }
 
         uploadFile.addEventListener('change', (e) => {
@@ -313,8 +361,14 @@
                 templateImg.onload = () => {
                     canvas.width = templateImg.width;
                     canvas.height = templateImg.height;
+                    
+                    // Sesuaikan slider batas maksimal dengan tinggi gambar asli
                     document.getElementById('posY').max = templateImg.height;
                     document.getElementById('posY').value = templateImg.height / 2;
+                    
+                    document.getElementById('nomorPosY').max = templateImg.height;
+                    document.getElementById('nomorPosY').value = (templateImg.height / 2) - 150; // Default ditaruh agak di atas nama
+
                     isLoaded = true;
                     btnDownloadZip.disabled = false;
                     
@@ -330,9 +384,11 @@
             reader.readAsDataURL(file);
         });
 
-        [listNama, 'selectFont', 'fontSize', 'fontColor', 'posY'].forEach(id => {
+        // Event listener untuk semua inputan agar pratinjau langsung berubah
+        const inputsToWatch = [listNama, 'selectFont', 'fontSize', 'fontColor', 'posY', 'startNomor', 'nomorFontSize', 'nomorPosY'];
+        inputsToWatch.forEach(id => {
             const el = typeof id === 'string' ? document.getElementById(id) : id;
-            el.addEventListener('input', updatePreview);
+            if(el) el.addEventListener('input', updatePreview);
         });
 
         btnDownloadZip.addEventListener('click', async () => {
@@ -347,17 +403,22 @@
             btnDownloadZip.innerText = "Memproses...";
             const zip = new JSZip();
             const total = names.length;
+            const formatDasar = document.getElementById('startNomor').value;
 
             for (let i = 0; i < total; i++) {
                 const nama = names[i].trim();
-                progressText.innerText = `Membuat sertifikat: ${i + 1} dari ${total} (${nama})...`;
+                const nomorOtomatis = generateNomorOtomatis(formatDasar, i);
                 
-                drawOne(nama);
+                progressText.innerText = `Membuat: ${i + 1}/${total} (${nama} - ${nomorOtomatis})...`;
+                
+                drawOne(nama, nomorOtomatis);
 
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
                 
                 const safeName = nama.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, '_');
-                zip.file(`Sertifikat_${safeName}.jpg`, blob);
+                // Nama file di dalam zip disertakan dengan nomor awalnya agar urut
+                const fileNumber = String(i + 1).padStart(3, '0'); 
+                zip.file(`Sertifikat_${fileNumber}_${safeName}.jpg`, blob);
             }
 
             progressText.innerText = "Mengompresi file menjadi ZIP... Mohon tunggu.";
