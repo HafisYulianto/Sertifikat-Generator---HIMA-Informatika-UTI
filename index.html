@@ -6,6 +6,7 @@
     <title>Sertifikat Generator - HIMA Informatika UTI</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
@@ -204,6 +205,45 @@
             font-weight: 600;
             color: var(--maroon);
         }
+
+        /* Styling Tambahan untuk Footer */
+        .site-footer {
+            margin-top: auto; /* Mendorong footer agar selalu di paling bawah */
+            background-color: var(--maroon-dark);
+            width: 100%;
+            padding: 25px 20px;
+            text-align: center;
+            color: #ccc;
+            border-top: 3px solid var(--gold);
+        }
+
+        .site-footer p {
+            margin: 0 0 15px 0;
+            font-size: 15px;
+        }
+
+        .site-footer strong {
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .social-links a {
+            color: #b0b0b0;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            color: var(--white);
+            transform: translateY(-3px);
+        }
     </style>
 </head>
 <body>
@@ -248,7 +288,16 @@
 
             <div class="number-box">
                 <label style="color: #6d4c41;">3. Pengaturan Nomor Sertifikat</label>
-                <input type="text" id="startNomor" value="005/SK/PAN-PEL/HIMA-IF/ITI/IV/2026" placeholder="Contoh: 001/SK/...">
+                
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 12px;">Format Lengkap Nomor Awal</label>
+                    <input type="text" id="startNomor" value="Masukan Nomor Sertifikat">
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 12px;">Target Angka yang Dilanjutkan</label>
+                    <input type="text" id="targetNomor" value="Masukan Nomor Sertifikat Yang Ingin Dilanjutkan" placeholder="Ketik angka yang ingin ditambah otomatis">
+                </div>
+
                 <div class="flex-row" style="margin-top: 10px;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label style="font-size: 12px;">Ukuran Font Nomor</label>
@@ -283,6 +332,15 @@
         </div>
     </div>
 
+    <footer class="site-footer">
+        <p>Web ini dibuat oleh <strong>Hafis Yulianto</strong></p>
+        <div class="social-links">
+            <a href="https://github.com/hafis-yulianto" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://linkedin.com/in/hafis-yulianto" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            <a href="https://instagram.com/hafis.yulianto" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+        </div>
+    </footer>
+
     <script>
         const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
@@ -301,16 +359,25 @@
         ctx.textAlign = "center";
         ctx.fillText("Area Pratinjau Desain", canvas.width/2, canvas.height/2);
 
-        // Fungsi Cerdas untuk Auto-Increment Nomor Sertifikat
-        function generateNomorOtomatis(formatDasar, index) {
-            if (!formatDasar) return "";
+        // Fungsi Cerdas untuk Auto-Increment Nomor Sertifikat Berdasarkan Target
+        function generateNomorOtomatis(formatUtuh, angkaTarget, index) {
+            if (!formatUtuh) return "";
+            if (!angkaTarget) return formatUtuh;
+
+            // Mencari posisi angka target di dalam string format utuh
+            const pos = formatUtuh.indexOf(angkaTarget);
             
-            // Mencari kelompok angka pertama di dalam string (misal: "005" dari "005/SK/...")
-            return formatDasar.replace(/(\d+)/, function(match) {
-                const angkaBaru = parseInt(match, 10) + index;
-                // Mempertahankan angka nol di depan (padding)
-                return String(angkaBaru).padStart(match.length, '0');
-            });
+            // Jika angka target tidak ditemukan di penomoran, kembalikan format aslinya
+            if (pos === -1) return formatUtuh; 
+
+            const prefix = formatUtuh.substring(0, pos);
+            const suffix = formatUtuh.substring(pos + angkaTarget.length);
+
+            const angkaBaru = parseInt(angkaTarget, 10) + index;
+            // Mempertahankan jumlah digit nol (misal 010 menjadi 011, bukan 11)
+            const angkaString = String(angkaBaru).padStart(angkaTarget.length, '0');
+
+            return prefix + angkaString + suffix;
         }
 
         function drawOne(nama, nomorSertifikat) {
@@ -324,17 +391,14 @@
             ctx.textBaseline = 'middle'; 
             ctx.fillStyle = color;
 
-            // 1. Gambar Nama
             const sizeNama = document.getElementById('fontSize').value;
             const yNama = document.getElementById('posY').value;
             ctx.font = `bold ${sizeNama}px ${font}`;
             ctx.fillText(nama, canvas.width / 2, yNama);
 
-            // 2. Gambar Nomor Sertifikat
             if (nomorSertifikat) {
                 const sizeNomor = document.getElementById('nomorFontSize').value;
                 const yNomor = document.getElementById('nomorPosY').value;
-                // Font dibuat tidak bold (normal) agar beda dengan nama
                 ctx.font = `normal ${sizeNomor}px ${font}`; 
                 ctx.fillText(nomorSertifikat, canvas.width / 2, yNomor);
             }
@@ -345,9 +409,10 @@
             const names = listNama.value.split('\n').filter(n => n.trim() !== "");
             const nameToShow = names.length > 0 ? names[0] : "[NAMA PESERTA]";
             
-            // Ambil nomor awal untuk pratinjau (index 0)
-            const formatAwal = document.getElementById('startNomor').value;
-            const nomorPratinjau = generateNomorOtomatis(formatAwal, 0);
+            const formatUtuh = document.getElementById('startNomor').value;
+            const angkaTarget = document.getElementById('targetNomor').value;
+            
+            const nomorPratinjau = generateNomorOtomatis(formatUtuh, angkaTarget, 0);
 
             drawOne(nameToShow, nomorPratinjau);
         }
@@ -362,12 +427,11 @@
                     canvas.width = templateImg.width;
                     canvas.height = templateImg.height;
                     
-                    // Sesuaikan slider batas maksimal dengan tinggi gambar asli
                     document.getElementById('posY').max = templateImg.height;
                     document.getElementById('posY').value = templateImg.height / 2;
                     
                     document.getElementById('nomorPosY').max = templateImg.height;
-                    document.getElementById('nomorPosY').value = (templateImg.height / 2) - 150; // Default ditaruh agak di atas nama
+                    document.getElementById('nomorPosY').value = (templateImg.height / 2) - 150; 
 
                     isLoaded = true;
                     btnDownloadZip.disabled = false;
@@ -384,8 +448,7 @@
             reader.readAsDataURL(file);
         });
 
-        // Event listener untuk semua inputan agar pratinjau langsung berubah
-        const inputsToWatch = [listNama, 'selectFont', 'fontSize', 'fontColor', 'posY', 'startNomor', 'nomorFontSize', 'nomorPosY'];
+        const inputsToWatch = [listNama, 'selectFont', 'fontSize', 'fontColor', 'posY', 'startNomor', 'targetNomor', 'nomorFontSize', 'nomorPosY'];
         inputsToWatch.forEach(id => {
             const el = typeof id === 'string' ? document.getElementById(id) : id;
             if(el) el.addEventListener('input', updatePreview);
@@ -403,22 +466,25 @@
             btnDownloadZip.innerText = "Memproses...";
             const zip = new JSZip();
             const total = names.length;
-            const formatDasar = document.getElementById('startNomor').value;
+            
+            const formatUtuh = document.getElementById('startNomor').value;
+            const angkaTarget = document.getElementById('targetNomor').value;
 
             for (let i = 0; i < total; i++) {
                 const nama = names[i].trim();
-                const nomorOtomatis = generateNomorOtomatis(formatDasar, i);
+                const nomorOtomatis = generateNomorOtomatis(formatUtuh, angkaTarget, i);
                 
-                progressText.innerText = `Membuat: ${i + 1}/${total} (${nama} - ${nomorOtomatis})...`;
+                progressText.innerText = `Membuat: ${i + 1}/${total} (${nama})...`;
                 
                 drawOne(nama, nomorOtomatis);
 
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
                 
+                // Membersihkan karakter khusus pada nama agar aman untuk format nama file
                 const safeName = nama.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, '_');
-                // Nama file di dalam zip disertakan dengan nomor awalnya agar urut
-                const fileNumber = String(i + 1).padStart(3, '0'); 
-                zip.file(`Sertifikat_${fileNumber}_${safeName}.jpg`, blob);
+                
+                // Format penamaan file diubah menjadi Sertifikat_Nama.jpg
+                zip.file(`Sertifikat_${safeName}.jpg`, blob);
             }
 
             progressText.innerText = "Mengompresi file menjadi ZIP... Mohon tunggu.";
@@ -426,7 +492,7 @@
             zip.generateAsync({ type: "blob" }).then((content) => {
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(content);
-                link.download = "Sertifikat_HIMA_UTI.zip";
+                link.download = "Hasil_Sertifikat.zip";
                 link.click();
                 
                 btnDownloadZip.disabled = false;
