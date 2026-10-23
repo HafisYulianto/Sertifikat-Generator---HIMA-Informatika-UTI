@@ -319,6 +319,38 @@
                 <small style="color: #666; display: block; margin-top: 5px;">* Teks di baris pertama otomatis muncul di pratinjau.</small>
             </div>
 
+            <div class="form-group" style="background: #fafafa; padding: 18px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 20px;">
+                <label style="color: var(--maroon);">5. Format Teks & Daftar Posisi / Jabatan</label>
+                
+                <select id="selectJabatanFont" style="margin-bottom: 10px;">
+                    <option value="'Poppins'">Poppins (Modern/Bersih)</option>
+                    <option value="Arial">Arial (Standar)</option>
+                    <option value="Georgia">Georgia (Elegan/Serif)</option>
+                    <option value="'Times New Roman'">Times New Roman (Formal)</option>
+                    <option value="'Courier New'">Courier New (Typewriter)</option>
+                </select>
+                <div class="flex-row" style="margin-bottom: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">Ukuran Font</label>
+                        <input type="number" id="jabatanFontSize" value="40">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">Posisi Y Jabatan</label>
+                        <input type="range" id="jabatanPosY" min="0" max="1000" value="620">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">Warna</label>
+                        <input type="color" id="jabatanFontColor" value="#333333">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 12px; color: #555;">Daftar Posisi / Jabatan</label>
+                    <textarea id="listJabatan" placeholder="Masukkan posisi/jabatan peserta di sini...&#10;Satu baris untuk satu nama (sesuai urutan nama).&#10;&#10;Contoh:&#10;Ketua Pelaksana&#10;Wakil Ketua&#10;Peserta" style="height: 100px;"></textarea>
+                    <small style="color: #666; display: block; margin-top: 5px; font-size: 11px;">* Urutan baris sesuai urutan nama di langkah 4. Jika hanya diisi 1 baris (misal: "Peserta"), otomatis berlaku untuk semua peserta. Kosongkan jika tidak dipakai.</small>
+                </div>
+            </div>
+
             <button id="btnDownloadZip" class="btn-zip" disabled>
                 Generate & Download (.ZIP)
             </button>
@@ -336,7 +368,7 @@
     </div>
 
     <footer class="site-footer">
-        <p>Created by <strong>Hafis Yulianto</strong></p>
+        <p>Hy <strong></strong></p>
         <div class="social-links">
             <a href="https://github.com/hafisyulianto" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
             <a href="https://www.linkedin.com/in/hafisyulianto/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
@@ -349,6 +381,7 @@
         const ctx = canvas.getContext('2d');
         const uploadFile = document.getElementById('uploadFile');
         const listNama = document.getElementById('listNama');
+        const listJabatan = document.getElementById('listJabatan');
         const btnDownloadZip = document.getElementById('btnDownloadZip');
         const progressText = document.getElementById('progressText');
 
@@ -383,7 +416,7 @@
             return prefix + angkaString + suffix;
         }
 
-        function drawOne(nama, nomorSertifikat) {
+        function drawOne(nama, nomorSertifikat, jabatan) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
 
@@ -405,19 +438,32 @@
                 ctx.font = `normal ${sizeNomor}px ${font}`; 
                 ctx.fillText(nomorSertifikat, canvas.width / 2, yNomor);
             }
+
+            if (jabatan && jabatan.trim() !== "") {
+                const fontJabatan = document.getElementById('selectJabatanFont').value;
+                const colorJabatan = document.getElementById('jabatanFontColor').value;
+                const sizeJabatan = document.getElementById('jabatanFontSize').value;
+                const yJabatan = document.getElementById('jabatanPosY').value;
+                ctx.fillStyle = colorJabatan;
+                ctx.font = `600 ${sizeJabatan}px ${fontJabatan}`;
+                ctx.fillText(jabatan.trim(), canvas.width / 2, yJabatan);
+            }
         }
 
         function updatePreview() {
             if (!isLoaded) return;
             const names = listNama.value.split('\n').filter(n => n.trim() !== "");
-            const nameToShow = names.length > 0 ? names[0] : "[NAMA PESERTA]";
+            const jabatans = listJabatan.value.split('\n').filter(j => j.trim() !== "");
+            
+            const nameToShow = names.length > 0 ? names[0].trim() : "[NAMA PESERTA]";
+            const jabatanToShow = jabatans.length > 0 ? jabatans[0].trim() : "";
             
             const formatUtuh = document.getElementById('startNomor').value;
             const angkaTarget = document.getElementById('targetNomor').value;
             
             const nomorPratinjau = generateNomorOtomatis(formatUtuh, angkaTarget, 0);
 
-            drawOne(nameToShow, nomorPratinjau);
+            drawOne(nameToShow, nomorPratinjau, jabatanToShow);
         }
 
         uploadFile.addEventListener('change', (e) => {
@@ -434,7 +480,10 @@
                     document.getElementById('posY').value = templateImg.height / 2;
                     
                     document.getElementById('nomorPosY').max = templateImg.height;
-                    document.getElementById('nomorPosY').value = (templateImg.height / 2) - 150; 
+                    document.getElementById('nomorPosY').value = Math.max(0, (templateImg.height / 2) - 150); 
+
+                    document.getElementById('jabatanPosY').max = templateImg.height;
+                    document.getElementById('jabatanPosY').value = Math.min(templateImg.height, (templateImg.height / 2) + 120);
 
                     isLoaded = true;
                     btnDownloadZip.disabled = false;
@@ -451,7 +500,11 @@
             reader.readAsDataURL(file);
         });
 
-        const inputsToWatch = [listNama, 'selectFont', 'fontSize', 'fontColor', 'posY', 'startNomor', 'targetNomor', 'nomorFontSize', 'nomorPosY'];
+        const inputsToWatch = [
+            listNama, listJabatan, 'selectFont', 'fontSize', 'fontColor', 'posY', 
+            'startNomor', 'targetNomor', 'nomorFontSize', 'nomorPosY',
+            'selectJabatanFont', 'jabatanFontSize', 'jabatanPosY', 'jabatanFontColor'
+        ];
         inputsToWatch.forEach(id => {
             const el = typeof id === 'string' ? document.getElementById(id) : id;
             if(el) el.addEventListener('input', updatePreview);
@@ -459,6 +512,7 @@
 
         btnDownloadZip.addEventListener('click', async () => {
             const names = listNama.value.split('\n').filter(n => n.trim() !== "");
+            const jabatans = listJabatan.value.split('\n').filter(j => j.trim() !== "");
             if (names.length === 0) {
                 alert("Masukkan minimal satu nama peserta terlebih dahulu!");
                 listNama.focus();
@@ -475,11 +529,20 @@
 
             for (let i = 0; i < total; i++) {
                 const nama = names[i].trim();
+                
+                // Ambil jabatan sesuai urutan baris peserta masing-masing
+                let jabatan = "";
+                if (jabatans.length === 1) {
+                    jabatan = jabatans[0].trim(); // jika cuma 1 baris, semua peserta pakai jabatan ini
+                } else if (i < jabatans.length) {
+                    jabatan = jabatans[i].trim(); // sesuai baris masing-masing
+                }
+
                 const nomorOtomatis = generateNomorOtomatis(formatUtuh, angkaTarget, i);
                 
                 progressText.innerText = `Membuat: ${i + 1}/${total} (${nama})...`;
                 
-                drawOne(nama, nomorOtomatis);
+                drawOne(nama, nomorOtomatis, jabatan);
 
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
                 
